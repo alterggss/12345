@@ -1,4 +1,3 @@
-# pip install streamlit
 # pip install streamlit-drawable-canvas
 import streamlit as st 
 from streamlit_drawable_canvas import st_canvas
@@ -8,16 +7,32 @@ from skimage.color import rgb2gray, rgba2rgb
 
 import numpy as np  
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.models import model_from_json
+
+st.set_page_config(
+    page_title = "英文字母辨識",
+    page_icon = ":pencil:",
+)
 
 # 模型載入
-model = tf.keras.models.load_model('model.h5')
+@st.cache(allow_output_mutation=True)
+def load_model():
+    return tf.keras.models.load_model('emnist_cnn_model.h5')
 
+model = load_model()
+
+st.markdown("<h1 style='text-align: center;'>英文字母辨識</h1>", unsafe_allow_html=True)
+hide_streamlit_style = """            
+                       <style>            
+                       #MainMenu {visibility: hidden;}            
+                       footer {visibility: hidden;}            
+                       </style>            
+                       """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+# Create a canvas component
 col1, col2 = st.columns(2)
 
 with col1:
-    # Create a canvas component
     canvas_result = st_canvas(
         fill_color="rgba(0, 0, 0, 1)",
         stroke_width=10,
@@ -31,7 +46,7 @@ with col1:
 
 with col2:
     if st.button('辨識'):
-        # print(canvas_result.image_data.shape)
+        print(canvas_result.image_data.shape)
         image1 = rgb2gray(rgba2rgb(canvas_result.image_data))
         image_resized = resize(image1, (28, 28), anti_aliasing=True)  
         # print(image_resized)
@@ -40,5 +55,5 @@ with col2:
         
         st.write("predict...")
         predictions = np.argmax(model.predict(X1), axis=-1)
-        st.write('# ' + chr(ord('A')+predictions[0]))
+        st.write('# '+str(chr(ord('A')+predictions[0])))
         st.image(image_resized)
